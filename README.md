@@ -1,233 +1,155 @@
-<!---
-Copyright 2022 - The HuggingFace Team. All rights reserved.
+# 🧨 Diffusers with BDIA-DDIM Sampler
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+This repository is a fork of the [Hugging Face Diffusers library](https://github.com/huggingface/diffusers) that implements the BDIA (Bi-directional Integration Approximation) technique from the ECCV 2024 paper ["Exact Diffusion Inversion via Bi-directional Integration Approximation"](https://arxiv.org/abs/placeholder) by Guoqiang Zhang, J. P. Lewis, and W. Bastiaan Kleijn.
 
-    http://www.apache.org/licenses/LICENSE-2.0
+## What's New
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
-<p align="center">
-    <br>
-    <img src="https://raw.githubusercontent.com/huggingface/diffusers/main/docs/source/en/imgs/diffusers_library.jpg" width="400"/>
-    <br>
-<p>
-<p align="center">
-    <a href="https://github.com/huggingface/diffusers/blob/main/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/huggingface/datasets.svg?color=blue"></a>
-    <a href="https://github.com/huggingface/diffusers/releases"><img alt="GitHub release" src="https://img.shields.io/github/release/huggingface/diffusers.svg"></a>
-    <a href="https://pepy.tech/project/diffusers"><img alt="GitHub release" src="https://static.pepy.tech/badge/diffusers/month"></a>
-    <a href="CODE_OF_CONDUCT.md"><img alt="Contributor Covenant" src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg"></a>
-    <a href="https://twitter.com/diffuserslib"><img alt="X account" src="https://img.shields.io/twitter/url/https/twitter.com/diffuserslib.svg?style=social&label=Follow%20%40diffuserslib"></a>
-</p>
-
-🤗 Diffusers is the go-to library for state-of-the-art pretrained diffusion models for generating images, audio, and even 3D structures of molecules. Whether you're looking for a simple inference solution or training your own diffusion models, 🤗 Diffusers is a modular toolbox that supports both. Our library is designed with a focus on [usability over performance](https://huggingface.co/docs/diffusers/conceptual/philosophy#usability-over-performance), [simple over easy](https://huggingface.co/docs/diffusers/conceptual/philosophy#simple-over-easy), and [customizability over abstractions](https://huggingface.co/docs/diffusers/conceptual/philosophy#tweakable-contributorfriendly-over-abstraction).
-
-🤗 Diffusers offers three core components:
-
-- State-of-the-art [diffusion pipelines](https://huggingface.co/docs/diffusers/api/pipelines/overview) that can be run in inference with just a few lines of code.
-- Interchangeable noise [schedulers](https://huggingface.co/docs/diffusers/api/schedulers/overview) for different diffusion speeds and output quality.
-- Pretrained [models](https://huggingface.co/docs/diffusers/api/models/overview) that can be used as building blocks, and combined with schedulers, for creating your own end-to-end diffusion systems.
+This fork adds the BDIA-DDIM sampler, which offers:
+- Exact diffusion inversion through bi-directional integration approximation
+- Improved sampling quality compared to traditional DDIM, particularly at lower timesteps
+- Mathematically rigorous approach to diffusion model inversion
 
 ## Installation
 
-We recommend installing 🤗 Diffusers in a virtual environment from PyPI or Conda. For more details about installing [PyTorch](https://pytorch.org/get-started/locally/) and [Flax](https://flax.readthedocs.io/en/latest/#installation), please refer to their official documentation.
-
-### PyTorch
-
-With `pip` (official package):
-
+### Local Installation
 ```bash
-pip install --upgrade diffusers[torch]
+git clone https://github.com/YOUR_USERNAME/diffusers
+cd diffusers
+pip install -e .
 ```
 
-With `conda` (maintained by the community):
+### Google Colab Installation
+```python
+# Clone the repository
+!git clone https://github.com/YOUR_USERNAME/diffusers
+!pip install -e diffusers
 
-```sh
-conda install -c conda-forge diffusers
+# If you want to store the scheduler in Google Drive
+from google.colab import drive
+drive.mount('/content/drive', force_remount=True)
 ```
 
-### Flax
+## Usage
 
-With `pip` (official package):
-
-```bash
-pip install --upgrade diffusers[flax]
-```
-
-### Apple Silicon (M1/M2) support
-
-Please refer to the [How to use Stable Diffusion in Apple Silicon](https://huggingface.co/docs/diffusers/optimization/mps) guide.
-
-## Quickstart
-
-Generating outputs is super easy with 🤗 Diffusers. To generate an image from text, use the `from_pretrained` method to load any pretrained diffusion model (browse the [Hub](https://huggingface.co/models?library=diffusers&sort=downloads) for 30,000+ checkpoints):
+### Basic Usage
+The BDIA-DDIM sampler works particularly well with the Stable Diffusion 2.1 base model, especially at lower timesteps. Note that BDIA-DDIM requires deterministic sampling (eta=0) to ensure exact diffusion inversion:
 
 ```python
-from diffusers import DiffusionPipeline
+from diffusers import StableDiffusionPipeline
+from scheduling_bdia_ddim import BDIA_DDIMScheduler
 import torch
 
-pipeline = DiffusionPipeline.from_pretrained("stable-diffusion-v1-5/stable-diffusion-v1-5", torch_dtype=torch.float16)
-pipeline.to("cuda")
-pipeline("An image of a squirrel in Picasso style").images[0]
+# Set model ID
+model_id = "stabilityai/stable-diffusion-2-1-base"
+
+# Initialize scheduler with BDIA parameters
+# Note: eta must be 0 for BDIA-DDIM as it requires deterministic sampling
+scheduler = BDIA_DDIMScheduler.from_pretrained(
+    model_id, 
+    subfolder="scheduler",
+    eta=0,          # Must be 0 for deterministic sampling
+    gamma=0.5       # BDIA gamma parameter (0.5 for low timesteps, 1.0 for ~100 timesteps)
+)
+
+# Initialize pipeline
+pipe = StableDiffusionPipeline.from_pretrained(
+    model_id,
+    scheduler=scheduler,
+    torch_dtype=torch.float32
+)
+pipe = pipe.to("cuda")
+
+# Generate image
+prompt = "A man dressed for the snowy mountain looks at the camera"
+image = pipe(
+    prompt,
+    num_inference_steps=10,    # BDIA-DDIM is particularly effective at lower timesteps
+    guidance_scale=9.0,
+    generator=torch.Generator("cuda").manual_seed(3)
+).images[0]
 ```
 
-You can also dig into the models and schedulers toolbox to build your own diffusion system:
-
+### Google Colab Complete Example
 ```python
-from diffusers import DDPMScheduler, UNet2DModel
-from PIL import Image
+# Mount Google Drive
+import sys
+from google.colab import drive
+drive.mount('/content/drive', force_remount=True)
+
+# Clone repository if not already done
+!git clone https://github.com/YOUR_USERNAME/diffusers
+!pip install -e diffusers
+
+# Import required modules
+from diffusers import StableDiffusionPipeline
+from scheduling_bdia_ddim import BDIA_DDIMScheduler
 import torch
 
-scheduler = DDPMScheduler.from_pretrained("google/ddpm-cat-256")
-model = UNet2DModel.from_pretrained("google/ddpm-cat-256").to("cuda")
-scheduler.set_timesteps(50)
+# Set model ID
+model_id = "stabilityai/stable-diffusion-2-1-base"
 
-sample_size = model.config.sample_size
-noise = torch.randn((1, 3, sample_size, sample_size), device="cuda")
-input = noise
+# Initialize scheduler
+# Note: eta must be 0 for BDIA-DDIM as it requires deterministic sampling
+scheduler = BDIA_DDIMScheduler.from_pretrained(
+    model_id, 
+    subfolder="scheduler", 
+    eta=0,
+    gamma=0.5  # 0.5 for low timesteps, 1.0 for ~100 timesteps
+)
 
-for t in scheduler.timesteps:
-    with torch.no_grad():
-        noisy_residual = model(input, t).sample
-        prev_noisy_sample = scheduler.step(noisy_residual, t, input).prev_sample
-        input = prev_noisy_sample
+# Initialize pipeline
+pipe = StableDiffusionPipeline.from_pretrained(
+    model_id,
+    scheduler=scheduler,
+    torch_dtype=torch.float32
+)
+pipe = pipe.to("cuda")
 
-image = (input / 2 + 0.5).clamp(0, 1)
-image = image.cpu().permute(0, 2, 3, 1).numpy()[0]
-image = Image.fromarray((image * 255).round().astype("uint8"))
-image
+# Generate image
+prompt = "A man dressed for the snowy mountain looks at the camera"
+image = pipe(
+    prompt,
+    num_inference_steps=10,
+    guidance_scale=9.0,
+    generator=torch.Generator("cuda").manual_seed(3)
+).images[0]
+
+# Display image
+image.show()
 ```
 
-Check out the [Quickstart](https://huggingface.co/docs/diffusers/quicktour) to launch your diffusion journey today!
+### Configuration Options
 
-## How to navigate the documentation
+The BDIA-DDIM scheduler supports the following parameters:
 
-| **Documentation**                                                   | **What can I learn?**                                                                                                                                                                           |
-|---------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [Tutorial](https://huggingface.co/docs/diffusers/tutorials/tutorial_overview)                                                            | A basic crash course for learning how to use the library's most important features like using models and schedulers to build your own diffusion system, and training your own diffusion model.  |
-| [Loading](https://huggingface.co/docs/diffusers/using-diffusers/loading_overview)                                                             | Guides for how to load and configure all the components (pipelines, models, and schedulers) of the library, as well as how to use different schedulers.                                         |
-| [Pipelines for inference](https://huggingface.co/docs/diffusers/using-diffusers/pipeline_overview)                                             | Guides for how to use pipelines for different inference tasks, batched generation, controlling generated outputs and randomness, and how to contribute a pipeline to the library.               |
-| [Optimization](https://huggingface.co/docs/diffusers/optimization/opt_overview)                                                        | Guides for how to optimize your diffusion model to run faster and consume less memory.                                                                                                          |
-| [Training](https://huggingface.co/docs/diffusers/training/overview) | Guides for how to train a diffusion model for different tasks with different training techniques.                                                                                               |
-## Contribution
+- `gamma` (float): BDIA integration parameter
+  - Use 0.5 for lower timesteps (recommended for steps < 20)
+  - Use 1.0 for higher timesteps (~100)
+  - Set to 0 to recreate standard DDIM behavior
+- `num_inference_steps` (int): Number of denoising steps (BDIA-DDIM is particularly effective at lower steps)
 
-We ❤️  contributions from the open-source community!
-If you want to contribute to this library, please check out our [Contribution guide](https://github.com/huggingface/diffusers/blob/main/CONTRIBUTING.md).
-You can look out for [issues](https://github.com/huggingface/diffusers/issues) you'd like to tackle to contribute to the library.
-- See [Good first issues](https://github.com/huggingface/diffusers/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) for general opportunities to contribute
-- See [New model/pipeline](https://github.com/huggingface/diffusers/issues?q=is%3Aopen+is%3Aissue+label%3A%22New+pipeline%2Fmodel%22) to contribute exciting new diffusion models / diffusion pipelines
-- See [New scheduler](https://github.com/huggingface/diffusers/issues?q=is%3Aopen+is%3Aissue+label%3A%22New+scheduler%22)
+Note: The `eta` parameter must always be set to 0 as BDIA-DDIM requires deterministic sampling to ensure exact diffusion inversion.
 
-Also, say 👋 in our public Discord channel <a href="https://discord.gg/G7tWnz98XR"><img alt="Join us on Discord" src="https://img.shields.io/discord/823813159592001537?color=5865F2&logo=discord&logoColor=white"></a>. We discuss the hottest trends about diffusion models, help each other with contributions, personal projects or just hang out ☕.
+## Comparison with Standard DDIM
 
-
-## Popular Tasks & Pipelines
-
-<table>
-  <tr>
-    <th>Task</th>
-    <th>Pipeline</th>
-    <th>🤗 Hub</th>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Unconditional Image Generation</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/ddpm"> DDPM </a></td>
-    <td><a href="https://huggingface.co/google/ddpm-ema-church-256"> google/ddpm-ema-church-256 </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Text-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/text2img">Stable Diffusion Text-to-Image</a></td>
-      <td><a href="https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5"> stable-diffusion-v1-5/stable-diffusion-v1-5 </a></td>
-  </tr>
-  <tr>
-    <td>Text-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/unclip">unCLIP</a></td>
-      <td><a href="https://huggingface.co/kakaobrain/karlo-v1-alpha"> kakaobrain/karlo-v1-alpha </a></td>
-  </tr>
-  <tr>
-    <td>Text-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/deepfloyd_if">DeepFloyd IF</a></td>
-      <td><a href="https://huggingface.co/DeepFloyd/IF-I-XL-v1.0"> DeepFloyd/IF-I-XL-v1.0 </a></td>
-  </tr>
-  <tr>
-    <td>Text-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/kandinsky">Kandinsky</a></td>
-      <td><a href="https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder"> kandinsky-community/kandinsky-2-2-decoder </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Text-guided Image-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/controlnet">ControlNet</a></td>
-      <td><a href="https://huggingface.co/lllyasviel/sd-controlnet-canny"> lllyasviel/sd-controlnet-canny </a></td>
-  </tr>
-  <tr>
-    <td>Text-guided Image-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/pix2pix">InstructPix2Pix</a></td>
-      <td><a href="https://huggingface.co/timbrooks/instruct-pix2pix"> timbrooks/instruct-pix2pix </a></td>
-  </tr>
-  <tr>
-    <td>Text-guided Image-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/img2img">Stable Diffusion Image-to-Image</a></td>
-      <td><a href="https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5"> stable-diffusion-v1-5/stable-diffusion-v1-5 </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Text-guided Image Inpainting</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint">Stable Diffusion Inpainting</a></td>
-      <td><a href="https://huggingface.co/runwayml/stable-diffusion-inpainting"> runwayml/stable-diffusion-inpainting </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Image Variation</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/image_variation">Stable Diffusion Image Variation</a></td>
-      <td><a href="https://huggingface.co/lambdalabs/sd-image-variations-diffusers"> lambdalabs/sd-image-variations-diffusers </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Super Resolution</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/upscale">Stable Diffusion Upscale</a></td>
-      <td><a href="https://huggingface.co/stabilityai/stable-diffusion-x4-upscaler"> stabilityai/stable-diffusion-x4-upscaler </a></td>
-  </tr>
-  <tr>
-    <td>Super Resolution</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/latent_upscale">Stable Diffusion Latent Upscale</a></td>
-      <td><a href="https://huggingface.co/stabilityai/sd-x2-latent-upscaler"> stabilityai/sd-x2-latent-upscaler </a></td>
-  </tr>
-</table>
-
-## Popular libraries using 🧨 Diffusers
-
-- https://github.com/microsoft/TaskMatrix
-- https://github.com/invoke-ai/InvokeAI
-- https://github.com/InstantID/InstantID
-- https://github.com/apple/ml-stable-diffusion
-- https://github.com/Sanster/lama-cleaner
-- https://github.com/IDEA-Research/Grounded-Segment-Anything
-- https://github.com/ashawkey/stable-dreamfusion
-- https://github.com/deep-floyd/IF
-- https://github.com/bentoml/BentoML
-- https://github.com/bmaltais/kohya_ss
-- +14,000 other amazing GitHub repositories 💪
-
-Thank you for using us ❤️.
-
-## Credits
-
-This library concretizes previous work by many different authors and would not have been possible without their great research and implementations. We'd like to thank, in particular, the following implementations which have helped us in our development and without which the API could not have been as polished today:
-
-- @CompVis' latent diffusion models library, available [here](https://github.com/CompVis/latent-diffusion)
-- @hojonathanho original DDPM implementation, available [here](https://github.com/hojonathanho/diffusion) as well as the extremely useful translation into PyTorch by @pesser, available [here](https://github.com/pesser/pytorch_diffusion)
-- @ermongroup's DDIM implementation, available [here](https://github.com/ermongroup/ddim)
-- @yang-song's Score-VE and Score-VP implementations, available [here](https://github.com/yang-song/score_sde_pytorch)
-
-We also want to thank @heejkoo for the very helpful overview of papers, code and resources on diffusion models, available [here](https://github.com/heejkoo/Awesome-Diffusion-Models) as well as @crowsonkb and @rromb for useful discussions and insights.
+The BDIA technique offers several advantages over standard DDIM:
+- Better performance at lower timesteps
+- More accurate inversion of the diffusion process through deterministic sampling
+- Better preservation of image details
+- Theoretical guarantees for inversion accuracy
 
 ## Citation
 
+If you use this implementation in your research, please cite both the original Diffusers library and the BDIA paper:
+
 ```bibtex
+@inproceedings{zhang2024exact,
+  title={Exact Diffusion Inversion via Bi-directional Integration Approximation},
+  author={Zhang, Guoqiang and Lewis, J. P. and Kleijn, W. Bastiaan},
+  booktitle={European Conference on Computer Vision},
+  year={2024}
+}
+
 @misc{von-platen-etal-2022-diffusers,
   author = {Patrick von Platen and Suraj Patil and Anton Lozhkov and Pedro Cuenca and Nathan Lambert and Kashif Rasul and Mishig Davaadorj and Dhruv Nair and Sayak Paul and William Berman and Yiyi Xu and Steven Liu and Thomas Wolf},
   title = {Diffusers: State-of-the-art diffusion models},
@@ -237,3 +159,17 @@ We also want to thank @heejkoo for the very helpful overview of papers, code and
   howpublished = {\url{https://github.com/huggingface/diffusers}}
 }
 ```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+## License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- The original Diffusers library team at Hugging Face
+- The authors of the BDIA paper for their novel approach to diffusion inversion
+- The open-source community for their continuous support and contributions
