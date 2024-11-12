@@ -7,7 +7,7 @@ This repository is a fork of the [Hugging Face Diffusers library](https://github
 This fork adds the BDIA-DDIM sampler, which offers:
 - Exact diffusion inversion through bi-directional integration approximation
 - Improved sampling quality compared to traditional DDIM, particularly at lower timesteps
-- Mathematically rigorous approach to diffusion model inversion
+- Mathematically exact approach to diffusion model inversion
 
 ## Installation
 
