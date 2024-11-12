@@ -13,7 +13,7 @@ This fork adds the BDIA-DDIM sampler, which offers:
 
 ### Local Installation
 ```bash
-git clone https://github.com/YOUR_USERNAME/diffusers
+git clone https://github.com/Jdh235/diffusers
 cd diffusers
 pip install -e .
 ```
@@ -21,7 +21,7 @@ pip install -e .
 ### Google Colab Installation
 ```python
 # Clone the repository
-!git clone https://github.com/YOUR_USERNAME/diffusers
+!git clone https://github.com/Jdh235/diffusers
 !pip install -e diffusers
 
 # If you want to store the scheduler in Google Drive
@@ -77,7 +77,7 @@ from google.colab import drive
 drive.mount('/content/drive', force_remount=True)
 
 # Clone repository if not already done
-!git clone https://github.com/YOUR_USERNAME/diffusers
+!git clone https://github.com/Jdh235/diffusers
 !pip install -e diffusers
 
 # Import required modules
