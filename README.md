@@ -16,46 +16,6 @@ This fork adds the BDIA-DDIM sampler, which offers:
 !git clone https://github.com/Jdh235/diffusers
 ```
 
-## Usage
-
-### Basic Usage
-The BDIA-DDIM sampler works particularly well with the Stable Diffusion 2.1 base model, especially at lower timesteps. Note that BDIA-DDIM requires deterministic sampling (eta=0) to ensure exact diffusion inversion:
-
-```python
-from diffusers import StableDiffusionPipeline
-from scheduling_bdia_ddim import BDIA_DDIMScheduler
-import torch
-
-# Set model ID
-model_id = "stabilityai/stable-diffusion-2-1-base"
-
-# Initialize scheduler with BDIA parameters
-# Note: eta must be 0 for BDIA-DDIM as it requires deterministic sampling
-scheduler = BDIA_DDIMScheduler.from_pretrained(
-    model_id, 
-    subfolder="scheduler",
-    eta=0,          # Must be 0 for deterministic sampling
-    gamma=0.5       # BDIA gamma parameter (0.5 for low timesteps, 1.0 for ~100 timesteps)
-)
-
-# Initialize pipeline
-pipe = StableDiffusionPipeline.from_pretrained(
-    model_id,
-    scheduler=scheduler,
-    torch_dtype=torch.float32
-)
-pipe = pipe.to("cuda")
-
-# Generate image
-prompt = "A man dressed for the snowy mountain looks at the camera"
-image = pipe(
-    prompt,
-    num_inference_steps=10,    # BDIA-DDIM is particularly effective at lower timesteps
-    guidance_scale=9.0,
-    generator=torch.Generator("cuda").manual_seed(3)
-).images[0]
-```
-
 ### Google Colab Complete Example
 ```python
 # Full Colab Demo for Running Stable Diffusion with Custom BDIA-DDIM Scheduler
