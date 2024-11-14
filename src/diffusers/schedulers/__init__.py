@@ -43,6 +43,7 @@ else:
     _import_structure["scheduling_consistency_decoder"] = ["ConsistencyDecoderScheduler"]
     _import_structure["scheduling_consistency_models"] = ["CMStochasticIterativeScheduler"]
     _import_structure["scheduling_ddim"] = ["DDIMScheduler"]
+    _import_structure["scheduling_bdia_ddim"] = ["BDIA_DDIMScheduler"]
     _import_structure["scheduling_ddim_cogvideox"] = ["CogVideoXDDIMScheduler"]
     _import_structure["scheduling_ddim_inverse"] = ["DDIMInverseScheduler"]
     _import_structure["scheduling_ddim_parallel"] = ["DDIMParallelScheduler"]
@@ -143,6 +144,7 @@ if TYPE_CHECKING or DIFFUSERS_SLOW_IMPORT:
         from .scheduling_consistency_decoder import ConsistencyDecoderScheduler
         from .scheduling_consistency_models import CMStochasticIterativeScheduler
         from .scheduling_ddim import DDIMScheduler
+        from .scheduling_bdia_ddim import BDIA_DDIMScheduler
         from .scheduling_ddim_cogvideox import CogVideoXDDIMScheduler
         from .scheduling_ddim_inverse import DDIMInverseScheduler
         from .scheduling_ddim_parallel import DDIMParallelScheduler
