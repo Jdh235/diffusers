@@ -72,7 +72,7 @@ The BDIA-DDIM scheduler supports the following parameters:
   - Set to 0 to recreate standard DDIM behavior
 - `num_inference_steps` (int): Number of denoising steps (BDIA-DDIM is particularly effective at lower steps)
 
-Note: The `eta` parameter must always be set to 0 as BDIA-DDIM requires deterministic sampling to ensure exact diffusion inversion.
+Note: The `eta` parameter must always be set to 0 as BDIA-DDIM requires deterministic sampling.
 
 ## Citation
 
