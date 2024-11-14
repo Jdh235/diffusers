@@ -1,32 +1,19 @@
 # 🧨 Diffusers with BDIA-DDIM Sampler
 
-This repository is a fork of the [Hugging Face Diffusers library](https://github.com/huggingface/diffusers) that implements the BDIA (Bi-directional Integration Approximation) technique from the ECCV 2024 paper ["Exact Diffusion Inversion via Bi-directional Integration Approximation"](https://arxiv.org/abs/placeholder) by Guoqiang Zhang, J. P. Lewis, and W. Bastiaan Kleijn.
+This repository is a fork of the [Hugging Face Diffusers library](https://github.com/huggingface/diffusers) that implements the BDIA (Bi-directional Integration Approximation) technique from the ECCV 2023 paper ["Exact Diffusion Inversion via Bi-directional Integration Approximation"](https://arxiv.org/abs/2307.10829) by Guoqiang Zhang, J. P. Lewis, and W. Bastiaan Kleijn.
 
 ## What's New
 
 This fork adds the BDIA-DDIM sampler, which offers:
-- Exact diffusion inversion through bi-directional integration approximation
-- Improved sampling quality compared to traditional DDIM, particularly at lower timesteps
-- Mathematically exact approach to diffusion model inversion
+- Improved sampling quality compared to traditional DDIM, particularly at lower timesteps.
+- Mathematically exact approach to diffusion model inversion, when used in 'round trip' BDIA-DDIM inversion.
 
 ## Installation
-
-### Local Installation
-```bash
-git clone https://github.com/Jdh235/diffusers
-cd diffusers
-pip install -e .
-```
 
 ### Google Colab Installation
 ```python
 # Clone the repository
 !git clone https://github.com/Jdh235/diffusers
-!pip install -e diffusers
-
-# If you want to store the scheduler in Google Drive
-from google.colab import drive
-drive.mount('/content/drive', force_remount=True)
 ```
 
 ## Usage
@@ -71,51 +58,48 @@ image = pipe(
 
 ### Google Colab Complete Example
 ```python
-# Mount Google Drive
+# Full Colab Demo for Running Stable Diffusion with Custom BDIA-DDIM Scheduler
+
+# Install dependencies (Uncomment if needed)
+# !pip install torch transformers accelerate
+
+# Clone the forked diffusers repository to Colab’s local storage
+!git clone https://github.com/Jdh235/diffusers.git
+
+# Uninstall the existing diffusers package (if any) to avoid conflicts
+!pip uninstall diffusers -y
+
+# Set the working directory to the cloned repository and update the Python path
+%cd /content/diffusers/src
 import sys
-from google.colab import drive
-drive.mount('/content/drive', force_remount=True)
+sys.path.append('/content/diffusers/src')
 
-# Clone repository if not already done
-!git clone https://github.com/Jdh235/diffusers
-!pip install -e diffusers
-
-# Import required modules
-from diffusers import StableDiffusionPipeline
-from scheduling_bdia_ddim import BDIA_DDIMScheduler
+# Import necessary modules from the diffusers package
+from diffusers import StableDiffusionPipeline, BDIA_DDIMScheduler
 import torch
 
-# Set model ID
+# Set model ID for the Stable Diffusion pipeline
 model_id = "stabilityai/stable-diffusion-2-1-base"
 
-# Initialize scheduler
-# Note: eta must be 0 for BDIA-DDIM as it requires deterministic sampling
-scheduler = BDIA_DDIMScheduler.from_pretrained(
-    model_id, 
-    subfolder="scheduler", 
-    eta=0,
-    gamma=0.5  # 0.5 for low timesteps, 1.0 for ~100 timesteps
-)
+# Set up the scheduler with parameters (adjust gamma to change behavior)
+scheduler = BDIA_DDIMScheduler.from_pretrained(model_id, subfolder="scheduler", eta=0, gamma=0.5)
 
-# Initialize pipeline
-pipe = StableDiffusionPipeline.from_pretrained(
-    model_id,
-    scheduler=scheduler,
-    torch_dtype=torch.float32
-)
+# Initialize the pipeline with the custom BDIA-DDIM scheduler
+pipe = StableDiffusionPipeline.from_pretrained(model_id, scheduler=scheduler, torch_dtype=torch.float32)
 pipe = pipe.to("cuda")
 
-# Generate image
+# Define the prompt and generate the image
 prompt = "A man dressed for the snowy mountain looks at the camera"
 image = pipe(
     prompt,
-    num_inference_steps=10,
+    num_inference_steps=40,
     guidance_scale=9.0,
-    generator=torch.Generator("cuda").manual_seed(3)
+    eta=0,
+    generator=torch.Generator("cuda").manual_seed(3),
 ).images[0]
 
-# Display image
-image.show()
+#show image
+image
 ```
 
 ### Configuration Options
@@ -129,14 +113,6 @@ The BDIA-DDIM scheduler supports the following parameters:
 - `num_inference_steps` (int): Number of denoising steps (BDIA-DDIM is particularly effective at lower steps)
 
 Note: The `eta` parameter must always be set to 0 as BDIA-DDIM requires deterministic sampling to ensure exact diffusion inversion.
-
-## Comparison with Standard DDIM
-
-The BDIA technique offers several advantages over standard DDIM:
-- Better performance at lower timesteps
-- More accurate inversion of the diffusion process through deterministic sampling
-- Better preservation of image details
-- Theoretical guarantees for inversion accuracy
 
 ## Citation
 
@@ -163,10 +139,6 @@ If you use this implementation in your research, please cite both the original D
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
