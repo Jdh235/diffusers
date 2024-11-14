@@ -79,11 +79,14 @@ Note: The `eta` parameter must always be set to 0 as BDIA-DDIM requires determin
 If you use this implementation in your research, please cite both the original Diffusers library and the BDIA paper:
 
 ```bibtex
-@inproceedings{zhang2024exact,
-  title={Exact Diffusion Inversion via Bi-directional Integration Approximation},
-  author={Zhang, Guoqiang and Lewis, J. P. and Kleijn, W. Bastiaan},
-  booktitle={European Conference on Computer Vision},
-  year={2024}
+@misc{zhang2023exactdiffusioninversionbidirectional,
+      title={Exact Diffusion Inversion via Bi-directional Integration Approximation}, 
+      author={Guoqiang Zhang and J. P. Lewis and W. Bastiaan Kleijn},
+      year={2023},
+      eprint={2307.10829},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2307.10829}, 
 }
 
 @misc{von-platen-etal-2022-diffusers,
