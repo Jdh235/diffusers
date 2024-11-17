@@ -1,13 +1,11 @@
 # 🧨 Diffusers with BDIA-DDIM Sampler [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1ycfU8YvnCZU6G4pSTLuZCHgj4EVCLPDL#scrollTo=7IIfx3FL9TxC)
 
 
-This repository is a fork of the [Hugging Face Diffusers library](https://github.com/huggingface/diffusers) that implements the BDIA (Bi-directional Integration Approximation) technique from the ECCV 2023 paper ["Exact Diffusion Inversion via Bi-directional Integration Approximation"](https://arxiv.org/abs/2307.10829) by Guoqiang Zhang, J. P. Lewis, and W. Bastiaan Kleijn.
+This repository is a fork of the [Hugging Face Diffusers library](https://github.com/huggingface/diffusers) that implements the BDIA (Bi-directional Integration Approximation) technique from the ECCV 2024 paper ["Exact Diffusion Inversion via Bi-directional Integration Approximation"](https://arxiv.org/abs/2307.10829) by Guoqiang Zhang, J. P. Lewis, and W. Bastiaan Kleijn.
 
 ## What's New
 
-This fork adds the BDIA-DDIM sampler, which offers:
-- Improved sampling quality compared to traditional DDIM, particularly at lower timesteps.
-- Mathematically exact approach to diffusion model inversion, when used in 'round trip' BDIA-DDIM inversion.
+This fork adds the BDIA-DDIM sampler, which offers improved sampling quality compared to traditional DDIM, particularly at lower timesteps.
 
 ## Installation
 
