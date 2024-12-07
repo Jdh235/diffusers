@@ -202,8 +202,6 @@ class BDIA_DDIMScheduler(SchedulerMixin, ConfigMixin):
         debug: Optional[bool] = None,
 
     ):
-        
-        debug = self._debug if debug is None else debug
 
         
         if trained_betas is not None:
@@ -376,6 +374,11 @@ class BDIA_DDIMScheduler(SchedulerMixin, ConfigMixin):
         """
         if self.num_inference_steps is None:
             raise ValueError("Number of inference steps is 'None', run 'set_timesteps' first")
+        
+        debug = self._debug if debug is None else debug
+
+        print('debug')
+        print(debug)
 
         # Calculate timesteps
         step_size = self.config.num_train_timesteps // self.num_inference_steps
