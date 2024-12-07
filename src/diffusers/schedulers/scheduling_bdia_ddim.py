@@ -199,7 +199,7 @@ class BDIA_DDIMScheduler(SchedulerMixin, ConfigMixin):
         timestep_spacing: str = "leading", #leading
         rescale_betas_zero_snr: bool = False,
         gamma: float = 1.0,
-        debug: bool = None,
+        debug: Optional[bool] = None,
 
     ):
         
