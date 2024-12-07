@@ -199,8 +199,13 @@ class BDIA_DDIMScheduler(SchedulerMixin, ConfigMixin):
         timestep_spacing: str = "leading", #leading
         rescale_betas_zero_snr: bool = False,
         gamma: float = 1.0,
+        debug: bool = None,
 
     ):
+        
+        debug = self._debug if debug is None else debug
+
+        
         if trained_betas is not None:
             self.betas = torch.tensor(trained_betas, dtype=torch.float32)
         elif beta_schedule == "linear":
