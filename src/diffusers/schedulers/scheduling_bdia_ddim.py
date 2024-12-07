@@ -376,10 +376,6 @@ class BDIA_DDIMScheduler(SchedulerMixin, ConfigMixin):
             raise ValueError("Number of inference steps is 'None', run 'set_timesteps' first")
         
         debug = self.config.debug
-
-        print('debug')
-        print(debug)
-
         # Calculate timesteps
         step_size = self.config.num_train_timesteps // self.num_inference_steps
         prev_timestep = timestep - step_size
